@@ -1,0 +1,64 @@
+// Initialisation de la carte
+var map = L.map('map').setView([12.6392, -8.0029], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
+
+// Icône chauffeurs
+var driverIcon = L.icon({
+  iconUrl: 'https://img.icons8.com/emoji/48/motorcycle-emoji.png',
+  iconSize: [30, 30]
+});
+
+var drivers = [];
+
+// Crée des chauffeurs animés autour de l'utilisateur
+function spawnDrivers(lat, lon, count=5){
+  for(let i=0; i<count; i++){
+    const offsetLat = (Math.random() - 0.5) / 100;
+    const offsetLon = (Math.random() - 0.5) / 100;
+    let marker = L.marker([lat + offsetLat, lon + offsetLon], {icon: driverIcon}).addTo(map);
+    drivers.push(marker);
+  }
+}
+
+// Déplacer les chauffeurs toutes les 2 secondes
+function animateDrivers(){
+  drivers.forEach(marker => {
+    const lat = marker.getLatLng().lat + (Math.random()-0.5)/500;
+    const lon = marker.getLatLng().lng + (Math.random()-0.5)/500;
+    marker.setLatLng([lat, lon]);
+  });
+}
+setInterval(animateDrivers, 2000);
+
+// Géolocalisation
+var userLat = 12.6392, userLon = -8.0029; // par défaut Bamako
+if(navigator.geolocation){
+  navigator.geolocation.getCurrentPosition(function(position){
+    userLat = position.coords.latitude;
+    userLon = position.coords.longitude;
+    L.marker([userLat, userLon]).addTo(map).bindPopup("Vous êtes ici").openPopup();
+    map.setView([userLat, userLon], 15);
+    spawnDrivers(userLat, userLon, 8);
+  });
+} else {
+  alert("Géolocalisation non supportée !");
+  spawnDrivers(userLat, userLon, 8);
+}
+
+// Réservation
+document.getElementById("orderBtn").addEventListener("click", function(){
+  const nom = document.getElementById("name").value;
+  const tel = document.getElementById("phone").value;
+  const depart = document.getElementById("departure").value;
+  const destination = document.getElementById("destination").value;
+
+  if(!nom || !tel || !depart || !destination){
+    alert("Veuillez remplir tous les champs !");
+    return;
+  }
+
+  alert(`✅ Commande reçue !\nNom: ${nom}\nTéléphone: ${tel}\nDépart: ${depart}\nDestination: ${destination}\nUn chauffeur proche est en route.`);
+});
